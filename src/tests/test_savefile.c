@@ -19,6 +19,14 @@
 
 static int errors;
 
+static void check_md5(const char *payload, const char *expected) {
+	char *checksum = mem_md5sum((u_char *)payload, strlen(payload));
+
+	assert(checksum != NULL);
+	assert(strcmp(checksum, expected) == 0);
+	free(checksum);
+}
+
 void logmsg(int level, int add_time, const char *format, ...) {
 	va_list args;
 
@@ -94,6 +102,9 @@ int main(void) {
 	unsigned char sample[] = "inert sample\000binary";
 	struct s_download download;
 	Attack attack;
+
+	check_md5("", "d41d8cd98f00b204e9800998ecf8427e");
+	check_md5("abc", "900150983cd24fb0d6963f7d28e17f72");
 
 	/* Permission failures must also be tested when make check is run as root. */
 	if (geteuid() == 0) {

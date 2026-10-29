@@ -1,3 +1,11 @@
+Version 1.1.3
+- Use the string protocol options with libcurl 7.85.0 or newer, fixing
+  builds with deprecated-declaration errors enabled (including Ubuntu 26.04).
+  Keep the existing options for libcurl 7.62.0 through 7.84.x; downloads
+  and redirects remain restricted to HTTP.
+- Correct the MD5 hex formatting buffer size so fortified builds do not abort
+  while saving payloads or computing their hashes. Add known-digest checks.
+
 Version 1.1.0
 - Fixed a memory leak in the httpDownload plugin
 - New xmatch plugin for automatic pattern-based decoding of XOR encoded data (requires libxmatch)
