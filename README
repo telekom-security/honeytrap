@@ -14,20 +14,35 @@ README
   Honeytrap can parse an attack string for  commands  advising  the
   server  to  download a file from another host. If a download com-
   mand is found, the server tries  to  retrieve  the  corresponding
-  file  automatically.  A downloaded file is stored locally with an
-  md5 checksum in its name. Currently, only ftp and tftp  are  sup-
-  ported.  Honeytrap implements its own clients with the aim to be-
-  have as similar as possible than Windows systems. Http  URIs  are
-  recognized  and  logged.  A http download routine may be added in
-  future releases.
+  file automatically. A downloaded file is stored locally with an
+  md5 checksum in its name. FTP and TFTP are implemented internally.
+  HTTP downloads use libcurl; each destination, including every
+  redirect, is checked before connecting.
 
 INSTALLATION
 
   Installation of honeytrap is  pretty straight forward.  Just do a
-  './configure  --with-stream-mon=<type> &&  make &&  make install'
+  './configure --with-stream-mon=<type> && make && make install'
   where '<type>' is the connection monitor  type  of  your  choice.
-  Please  refer to the INSTALL file and to the output of './config-
-  ure --help' for further information.
+  libcurl 7.62.0 or newer development headers and library are required. Please
+  refer to the INSTALL file and to the output of './configure --help'
+  for further information.
+
+DOWNLOAD DESTINATION POLICY
+
+  Downloaders may connect to public IP addresses by default. Private,
+  loopback, link-local, multicast, reserved and other non-public
+  addresses are rejected. To permit a controlled private test network,
+  set download_allow_private_ips to a comma-separated list of IP
+  addresses or CIDR ranges, for example:
+
+    download_allow_private_ips = "192.168.56.0/24,fd00:1234::/48"
+
+  HTTP redirects are followed only after the new destination has been
+  resolved, checked against this policy and pinned to the checked IP.
+  The legacy http_program and http_options settings are accepted for
+  configuration compatibility but ignored; Honeytrap uses its built-in
+  libcurl client.
 
 WARNINGS
 

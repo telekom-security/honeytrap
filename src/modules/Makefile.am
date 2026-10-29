@@ -54,6 +54,7 @@ htm_ftpDownload_la_LDFLAGS = -module -no-undefined -avoid-version
 
 htm_httpDownload_la_SOURCES = htm_httpDownload.c htm_httpDownload.h
 htm_httpDownload_la_LDFLAGS = -module -no-undefined -avoid-version
+htm_httpDownload_la_LIBADD = $(CURL_LIBS)
 
 htm_tftpDownload_la_SOURCES = htm_tftpDownload.c htm_tftpDownload.h
 htm_tftpDownload_la_LDFLAGS = -module -no-undefined -avoid-version

@@ -32,6 +32,7 @@
 #include "logging.h"
 #include "response.h"
 #include "util.h"
+#include "download_policy.h"
 #include "ctrl.h"
 #include "signals.h"
 #include "plugin.h"
@@ -56,6 +57,7 @@ static const char *config_keywords[] = {
 	"read_limit",
 	"bind_address",
 	"replace_private_ips",
+	"download_allow_private_ips",
 #ifdef USE_PCAP_MON
 	"promisc",
 #endif
@@ -461,6 +463,13 @@ conf_node *process_confopt(conf_node *tree, conf_node *node, void *opt_data) {
 				exit(EXIT_FAILURE);
 			}
 			DEBUG_FPRINTF(stdout, "  Setting promiscuous mode to on.\n");
+		} else if (OPT_IS("download_allow_private_ips")) {
+			if (download_policy_set_allowlist(value) != 0) {
+				fprintf(stderr, "  Error - Unable to parse download_allow_private_ips.\n");
+				free(value);
+				exit(EXIT_FAILURE);
+			}
+			free(value);
 		} else if (OPT_IS("read_limit")) {
 			read_limit = atol(value);
 			if (read_limit <= 0) {

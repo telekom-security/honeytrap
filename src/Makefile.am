@@ -1,4 +1,4 @@
-AUTOMAKE_OPTIONS=foreign no-dependencies
+AUTOMAKE_OPTIONS=foreign no-dependencies subdir-objects
 
 AM_CFLAGS=-export-dynamic -Wall -Werror -Wno-stringop-truncation -Wno-stringop-overflow -Wno-format-overflow -fcommon
 
@@ -14,6 +14,7 @@ honeytrap_SOURCES = 	honeytrap.c honeytrap.h \
 			conftree.c conftree.h \
 			plugin.c plugin.h \
 			plughook.c plughook.h \
+			download_policy.c download_policy.h \
 			util.c util.h \
 			connectmon.c connectmon.h \
 			response.c response.h \
@@ -38,3 +39,8 @@ honeytrap_SOURCES += 	nfqmon.c nfqmon.h
 endif
 
 SUBDIRS = modules
+
+check_PROGRAMS = test_download_policy
+TESTS = $(check_PROGRAMS)
+test_download_policy_SOURCES = tests/test_download_policy.c download_policy.c download_policy.h
+test_download_policy_LDADD = $(CURL_LIBS)

@@ -35,11 +35,12 @@
 #include <tcpip.h>
 
 #include "htm_tftpDownload.h"
+#include "download_policy.h"
 
 #define MAX_TRANSMISSION_TRIES  10      /* retransmit 9 times */
 
 const char module_name[]="tftpDownload";
-const char module_version[]="1.0.1";
+const char module_version[]="1.1.0";
 
 
 void plugin_config(void) {
@@ -159,6 +160,7 @@ int tftp_quit(int data_sock_fd) {
 
 int get_tftp_resource(struct in_addr* host, const char *save_file, Attack *attack) {
 	struct sockaddr_in data_socket, from;
+	struct sockaddr_in target;
 	int data_sock_fd, fromlen, bytes_sent, data_arrived,
 	    tftp_command_size, socklen, retransmissions, received_last_packet, last_ack_packet;
 	uint8_t *binary_stream;
@@ -195,6 +197,15 @@ int get_tftp_resource(struct in_addr* host, const char *save_file, Attack *attac
 	if (0 == *(u_int32_t *)host) {
 		logmsg(LOG_DEBUG, 1, "  TFTP download - TFTP server IP addres corrected to %s.\n", inet_ntoa(*host));
 		host = (struct in_addr *) &attack->a_conn.r_addr;
+	}
+
+	memset(&target, 0, sizeof(target));
+	target.sin_family = AF_INET;
+	target.sin_addr = *host;
+	if (!download_policy_address_allowed((struct sockaddr *)&target)) {
+		logmsg(LOG_WARN, 1,
+			"TFTP download - Refusing a destination that is not public or allowlisted.\n");
+		return -1;
 	}
 
 	/* connect to server */

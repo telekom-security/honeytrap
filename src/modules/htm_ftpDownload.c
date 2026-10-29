@@ -39,9 +39,10 @@
 #include <util.h>
 
 #include "htm_ftpDownload.h"
+#include "download_policy.h"
 
 const char module_name[]="ftpDownload";
-const char module_version[]="1.0.1";
+const char module_version[]="1.1.0";
 
 char *ftp_host = NULL;
 
@@ -343,9 +344,9 @@ int get_ftp_resource(const char *user, const char* pass, struct in_addr *lhost, 
 	attack->dl_tries++;
 
 	/* replace private ip? */
-	if (replace_private_ips && (private_ipaddr(*lhost) || !(valid_ipaddr(*lhost)))) {
+	if (replace_private_ips && (private_ipaddr(*rhost) || !(valid_ipaddr(*rhost)))) {
 		logmsg(LOG_NOISY, 1, "FTP download - Replacing private/invalid server address with attacking IP address.\n");
-		lhost = (struct in_addr *) &attack->a_conn.r_addr;
+		rhost = (struct in_addr *) &attack->a_conn.r_addr;
 	}
 	
 	logmsg(LOG_NOTICE, 1, "FTP download - Requesting '%s' from %s:%u.\n", save_file, inet_ntoa(*rhost), port);
@@ -374,6 +375,12 @@ int get_ftp_resource(const char *user, const char* pass, struct in_addr *lhost, 
 	remote_control_socket.sin_family          = AF_INET;
 	remote_control_socket.sin_addr.s_addr     = *(in_addr_t *)rhost;
 	remote_control_socket.sin_port            = htons(port);
+	if (!download_policy_address_allowed((struct sockaddr *)&remote_control_socket)) {
+		logmsg(LOG_WARN, 1,
+			"FTP download - Refusing a destination that is not public or allowlisted.\n");
+		close(control_sock_fd);
+		return -1;
+	}
 	if (nb_connect(control_sock_fd, (struct sockaddr *) &remote_control_socket, sizeof(remote_control_socket), CONNTIMEOUT) == -1) {
 		/* if network or host is unreachable try attacking address instead */
 		switch(errno) {
@@ -384,6 +391,12 @@ int get_ftp_resource(const char *user, const char* pass, struct in_addr *lhost, 
 			if (rhost != (struct in_addr *) &attack->a_conn.r_addr) {
 				rhost = (struct in_addr *) &attack->a_conn.r_addr;
 				remote_control_socket.sin_addr.s_addr     = *(in_addr_t *)rhost;
+				if (!download_policy_address_allowed((struct sockaddr *)&remote_control_socket)) {
+					logmsg(LOG_WARN, 1,
+						"FTP download - Refusing a fallback destination that is not public or allowlisted.\n");
+					close(control_sock_fd);
+					return -1;
+				}
 				logmsg(LOG_NOISY, 1, "FTP download - FTP server could not be reached, trying the attacking address (%s) instead.\n",
 					inet_ntoa(*rhost));
 				if (nb_connect(control_sock_fd, (struct sockaddr *) &remote_control_socket, sizeof(remote_control_socket), CONNTIMEOUT) == -1) {

@@ -31,6 +31,9 @@ AC_HEADER_DIRENT
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([arpa/inet.h fcntl.h libintl.h malloc.h memory.h netdb.h netinet/in.h stddef.h stdint.h stdlib.h string.h strings.h sys/file.h sys/socket.h sys/time.h unistd.h])
+AC_CHECK_HEADER([curl/curl.h], [], [AC_MSG_ERROR([libcurl development headers are required for the HTTP downloader])])
+AC_CHECK_LIB([curl], [curl_url], [CURL_LIBS="-lcurl"], [AC_MSG_ERROR([libcurl 7.62.0 or newer is required for the HTTP downloader])])
+AC_SUBST([CURL_LIBS])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_HEADER_STDBOOL
