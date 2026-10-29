@@ -83,7 +83,8 @@ int download_policy_set_allowlist(const char *value) {
 	size_t new_size = 0;
 	char *copy, *cursor, *comma, *entry;
 
-	if (!value || !(copy = strdup(value))) return -1;
+	if (!value) value = "";
+	if (!(copy = strdup(value))) return -1;
 	cursor = copy;
 
 	while (cursor) {

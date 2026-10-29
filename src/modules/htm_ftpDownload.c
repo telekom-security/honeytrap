@@ -42,7 +42,7 @@
 #include "download_policy.h"
 
 const char module_name[]="ftpDownload";
-const char module_version[]="1.1.0";
+const char module_version[]="1.1.1";
 
 char *ftp_host = NULL;
 

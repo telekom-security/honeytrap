@@ -46,7 +46,7 @@
 #define MAX_HTTP_REDIRECTS 5
 
 const char module_name[]="httpDownload";
-const char module_version[]="1.1.0";
+const char module_version[]="1.1.1";
 
 static const char *config_keywords[] = {
 	"http_program",

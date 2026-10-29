@@ -40,6 +40,8 @@ static void test_relative_redirect(void) {
 
 int main(void) {
 	test_relative_redirect();
+	assert(download_policy_set_allowlist(NULL) == 0);
+	assert(!ipv4_allowed("10.20.1.2"));
 	assert(download_policy_set_allowlist("") == 0);
 	assert(ipv4_allowed("8.8.8.8"));
 	assert(!ipv4_allowed("10.1.2.3"));
