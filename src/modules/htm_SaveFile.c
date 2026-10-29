@@ -41,7 +41,7 @@
 #include "htm_SaveFile.h"
 
 const char module_name[]="SaveFile";
-const char module_version[]="1.0.1";
+const char module_version[]="1.0.2";
 
 static const char *config_keywords[] = {
 	"attacks_dir",
@@ -150,22 +150,33 @@ int save_to_file(Attack *attack) {
 	}
 
 	/* open file and set access rights */
-	if ((dumpfile_fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 644)) < 0) {
+	if ((dumpfile_fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0644)) < 0) {
 		logmsg(LOG_ERR, 1, "SaveFile error - Unable to save attack string in attacks directory: %s\n", strerror(errno));
+		free(filename);
 		return(-1);
 	}
-	if (chmod(filename, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0)
-		logmsg(LOG_WARN, 1, "SaveFile warning - Unable to set proper acces rights\n");
+	if (fchmod(dumpfile_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0) {
+		logmsg(LOG_ERR, 1, "SaveFile error - Unable to set attack file permissions: %s\n", strerror(errno));
+		close(dumpfile_fd);
+		free(filename);
+		return(-1);
+	}
 
 
 	/* write data to file */
 	if (write(dumpfile_fd, attack->a_conn.payload.data, attack->a_conn.payload.size) != attack->a_conn.payload.size) {
 		logmsg(LOG_ERR, 1, "SaveFile error - Unable to write attack string into file: %s\n", strerror(errno));
 		close(dumpfile_fd);
+		free(filename);
 		return(-1);
 	}
-	close(dumpfile_fd);
+	if (close(dumpfile_fd) != 0) {
+		logmsg(LOG_ERR, 1, "SaveFile error - Unable to close attack file: %s\n", strerror(errno));
+		free(filename);
+		return(-1);
+	}
 	logmsg(LOG_DEBUG, 1, "SaveFile - Attack string saved as %s.\n", filename);
+	free(filename);
 
 	/* save malware */
 	for (i=0; i<attack->dl_count; i++) {
@@ -185,11 +196,17 @@ int save_to_file(Attack *attack) {
 			}
 		}
 		logmsg(LOG_DEBUG, 1, "SaveFile - Malware sample dumpfile name is %s\n", mwfilename);
-		if (((dumpfile_fd = open(mwfilename, O_WRONLY | O_CREAT | O_EXCL, 644)) < 0) ||
-		    (fchmod(dumpfile_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0)) {
+		if ((dumpfile_fd = open(mwfilename, O_WRONLY | O_CREAT | O_EXCL, 0644)) < 0) {
+			logmsg(LOG_WARN, 1, "SaveFile error - Unable to save malware sample dumpfile %s: %s.\n", mwfilename,
+				strerror(errno));
+			free(mwfilename);
+			return(-1);
+		}
+		if (fchmod(dumpfile_fd, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH) != 0) {
 			logmsg(LOG_WARN, 1, "SaveFile error - Unable to save malware sample dumpfile %s: %s.\n", mwfilename,
 				strerror(errno));
 			close(dumpfile_fd);
+			free(mwfilename);
 			return(-1);
 		}
 		if (write(dumpfile_fd,
@@ -198,9 +215,16 @@ int save_to_file(Attack *attack) {
 			logmsg(LOG_ERR, 1, "SaveFile error - Unable to save malware sample dumpfile: %s\n",
 				strerror(errno));
 			close(dumpfile_fd);
+			free(mwfilename);
 			return(-1);
 		}
-		close(dumpfile_fd);
+		if (close(dumpfile_fd) != 0) {
+			logmsg(LOG_ERR, 1, "SaveFile error - Unable to close malware sample dumpfile: %s\n", strerror(errno));
+			free(mwfilename);
+			return(-1);
+		}
+		free(mwfilename);
+		mwfilename = NULL;
 		if (attack->download[i].filename)
 			logmsg(LOG_NOTICE, 1, "SaveFile - Malware sample dumpfile %s saved.\n", attack->download[i].filename);
 		else

@@ -40,7 +40,8 @@ endif
 
 SUBDIRS = modules
 
-check_PROGRAMS = test_download_policy
+check_PROGRAMS = test_download_policy test_savefile
 TESTS = $(check_PROGRAMS)
 test_download_policy_SOURCES = tests/test_download_policy.c download_policy.c download_policy.h
 test_download_policy_LDADD = $(CURL_LIBS)
+test_savefile_SOURCES = tests/test_savefile.c md5.c md5.h

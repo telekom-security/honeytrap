@@ -44,6 +44,17 @@ DOWNLOAD DESTINATION POLICY
   configuration compatibility but ignored; Honeytrap uses its built-in
   libcurl client.
 
+FILE STORAGE
+
+  SaveFile creates attack payload and download files with mode 0644 and
+  applies permissions through the open file descriptor. This also works
+  on Docker Desktop bind mounts. Existing files are never overwritten;
+  creation, permission, write and close failures are logged and reported.
+  Run make check to test the policy and SaveFile, including file contents,
+  permissions and failures as an unprivileged user. To check a bind mount,
+  run ./test_savefile from src with TMPDIR set to a writable mounted
+  directory after building.
+
 WARNINGS
 
   Honeytrap is a low-interactive honeypot and therefore detectable.
